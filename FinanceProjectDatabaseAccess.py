@@ -9,6 +9,7 @@ import sys
 conn = lite.connect('PythonFinanaces.db')
 
 with conn:
+	#Gets AccountIDs with Transactions
 	def AccOverDataWithTransID():
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
@@ -25,16 +26,7 @@ with conn:
 		conn.close()
 		return rows
 		
-	def AccOverDataWithoutTransID():
-		conn = lite.connect('PythonFinanaces.db')
-		cur = conn.cursor()
-		AccountIDs = AccountOverviewTreeviewDataFiltering()
-
-		cur.execute('''SELECT AccountID,Account_Type,Balance FROM Accounts
-		WHERE AccountID NOT IN (SELECT AccountID FROM 'Transaction') ''')
-		rows=cur.fetchall()
-		conn.close()
-		return rows
+	
 	def AccountOverviewTreeviewDataFiltering():
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
@@ -81,5 +73,53 @@ with conn:
 		rows=String
 		conn.close()
 		return rows
-AccOverDataWithTransID()
-AccOverDataWithoutTransID()
+	#Get Accounts without Transactions
+	def AccOverDataWithoutTransID():
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		cur.execute('''SELECT AccountID,Account_Type,Balance FROM Accounts
+		WHERE AccountID NOT IN (SELECT AccountID FROM 'Transaction') ''')
+		rows=cur.fetchall()
+		conn.close()
+		return rows
+	def HandleAccount(AccountInfo,TransactionDate,TransactionAmount,TransactionType):
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		if len(TransactionAmount)>0:
+			TransactionAmount=float(TransactionAmount)
+			print(TransactionAmount)
+		AccountNum=AccountInfo[0]
+		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
+		PreviousBalance =cur.fetchall()
+		for item in PreviousBalance:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			PreviousBalance=(String)
+		PreviousBalance = float(PreviousBalance)
+		if TransactionAmount!=0:
+			NewBalance=PreviousBalance+TransactionAmount
+			print(NewBalance)
+		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
+		TransID=cur.fetchall()
+		print(TransID)
+		for item in TransID:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			NewTransID=int(String)+1
+			print(NewTransID)
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,?,?,?,?,?)'''
+		,(NewTransID,AccountNum,TransactionDate,TransactionAmount,PreviousBalance,NewBalance,TransactionType))
+		cur.execute('SELECT * FROM "Transaction"')
+		rows=cur.fetchall()
+		conn.commit()
+		for row in rows:
+			print(row)
+		conn.close()
+if __name__ == '__main__':
+	AccOverDataWithTransID()
+	AccOverDataWithoutTransID()
+	HandleAccount('AccountInfo','TransactionAmount','TransactionType','TransactionDate')

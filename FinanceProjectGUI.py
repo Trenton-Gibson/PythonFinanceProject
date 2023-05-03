@@ -65,7 +65,6 @@ class FinanceGUI:
 	
 	# Additional window methods
 	def AddDeleteWindow(self):
-		
 		# Remove Account Overview Window
 		self.AccountOverview.destroy()
 		# Create Add/Delete Account Window
@@ -112,8 +111,6 @@ class FinanceGUI:
 		self.AddDelQuitButton.pack(side='left')
 	
 	def HandleAccountWindow(self):
-		self.selected = self.AccOverAccountsInfoTreeview.focus()
-		self.Account = self.AccOverAccountsInfoTreeview.item(self.selected, 'values')
 		# remove account overview window
 		self.AccountOverview.destroy()
 		# Create Handle account window
@@ -121,25 +118,62 @@ class FinanceGUI:
 		self.HandleAccount.title('Handle Account')
 		# Create frames
 		self.HandAccTopFrame = tk.Frame(self.HandleAccount)
+		self.HandAccMidFrame=tk.Frame(self.HandleAccount)
 		self.HandAccBotFrame = tk.Frame(self.HandleAccount)
 		self.HandAccTopFrame.pack()
+		self.HandAccMidFrame.pack()
 		self.HandAccBotFrame.pack()
 		# Create top Frame widgets
 		self.TransactionLabel = tk.Label(self.HandAccTopFrame,
-										 text='Enter the transaction amount here\n(negative amount for costs and postive for income).')
+	 	text='Enter the transaction amount here\n(negative amount for costs and postive for income):')
 		self.TransactionEntry = tk.Entry(self.HandAccTopFrame, width=50)
-		self.TransactionLabel.pack(side='left')
-		self.TransactionEntry.pack(side='left')
+		self.DateofTransLabel=tk.Label(self.HandAccTopFrame,text='Enter the date of the transaction:')
+		self.DateofTransEntry=tk.Entry(self.HandAccTopFrame,width=50)
+		self.TransactionTypeLabel=tk.Label(self.HandAccTopFrame,text='What type of transaction was this?')
+		self.TransactionTypeEntry=tk.Entry(self.HandAccTopFrame,width=50)
+		self.TransactionLabel.pack()
+		self.TransactionEntry.pack()
+		self.DateofTransLabel.pack()
+		self.DateofTransEntry.pack()
+		self.TransactionTypeLabel.pack()
+		self.TransactionTypeEntry.pack()
+		#Create Mid Frame Widgets
+		# Create Account Treeview
+		self.AccOverAccountsInfoTreeview = ttk.Treeview(self.HandAccMidFrame,
+		columns=('column1', 'column2', 'column3', 'column4', 'column5','column6'), show='headings')
+		self.AccOverAccountsInfoTreeview['columns'] =('AccountID', 'Account Type', 'Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
+		self.AccOverAccountsInfoTreeview.column('AccountID', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#1", text="AccountID")
+		self.AccOverAccountsInfoTreeview.column('Account Type', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#2", text="Account Type")
+		self.AccOverAccountsInfoTreeview.column('Balance', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#3", text="Balance")
+		self.AccOverAccountsInfoTreeview.column('TransactionID', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#4", text="TransactionID")
+		self.AccOverAccountsInfoTreeview.pack()
+		self.AccOverAccountsInfoTreeview.column('Money Transferred', width=150)
+		self.AccOverAccountsInfoTreeview.heading("#5", text="Money Transferred")
+		self.AccOverAccountsInfoTreeview.pack()
+		self.AccOverAccountsInfoTreeview.column('Date of Transaction', width=150)
+		self.AccOverAccountsInfoTreeview.heading("#6", text="Date of Transaction")
+		self.AccOverAccountsInfoTreeview.pack()
+		# Populate treeview with data
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
 		# Creat bottom frame widgets
-		self.ConfirmTransactionButton = tk.Button(self.HandAccBotFrame, text='Confirm Transaction')
-		self.HandAccReturnParentWindow = tk.Button(self.HandAccBotFrame, text='Return to Parent Window',
-												   command=self.ReturnParentWindowHandAcc)
+		self.ConfirmTransactionButton = tk.Button(self.HandAccBotFrame, text='Confirm Transaction',command=self.TransDataAndTransCommit)
+		self.HandAccReturnParentWindow = tk.Button(self.HandAccBotFrame, text='Return to Parent Window',command=self.ReturnParentWindowHandAcc)
 		self.HandAccQuitButton = tk.Button(self.HandAccBotFrame, text='Quit Program',
 										   command=self.HandleAccount.destroy)
 		self.ConfirmTransactionButton.pack(side='left')
 		self.HandAccReturnParentWindow.pack(side='left')
 		self.HandAccQuitButton.pack(side='left')
-	
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		
 	def TransferMoneyWindow(self):
 		#remove account overview window
 		self.AccountOverview.destroy()
@@ -189,5 +223,21 @@ class FinanceGUI:
 	def ReturnParentWindowTransMon(self):
 		self.TransferMoney.destroy()
 		FinanceGUI()
+	def TransDataAndTransCommit(self):
+		# Get data for Transaction
+		self.selected = self.AccOverAccountsInfoTreeview.focus()
+		self.Account = self.AccOverAccountsInfoTreeview.item(self.selected, 'values')
+		self.TransactionDate = self.DateofTransEntry.get()
+		self.TransactionAmount=self.TransactionEntry.get()
+		self.TransactionType=self.TransactionTypeEntry.get()
+		FinanceProjectDatabaseAccess.HandleAccount(self.Account,self.TransactionDate,self.TransactionAmount,self.TransactionType)
+		#Repopulate treeview with data
+		#rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		#for row in rows:
+		#	self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		#rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
+		#for row in rows:
+		#	self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+	
 # Call the Finance GUI Class
 FinanceGUI()
