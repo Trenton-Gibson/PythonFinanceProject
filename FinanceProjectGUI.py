@@ -232,12 +232,14 @@ class FinanceGUI:
 		self.TransactionType=self.TransactionTypeEntry.get()
 		FinanceProjectDatabaseAccess.HandleAccount(self.Account,self.TransactionDate,self.TransactionAmount,self.TransactionType)
 		#Repopulate treeview with data
-		#rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
-		#for row in rows:
-		#	self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
-		#rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
-		#for row in rows:
-		#	self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		for item in self.AccOverAccountsInfoTreeview.get_children():
+			self.AccOverAccountsInfoTreeview.delete(item)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
 	
 # Call the Finance GUI Class
 FinanceGUI()

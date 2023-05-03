@@ -18,8 +18,10 @@ with conn:
 		AddRows=()
 		for item in AccountIDs:
 			TransIDList= TransIDProcessing(item)
+			print(TransIDList)
 			if 'e' not in TransIDList:
 				MaxTransID = max(TransIDList)
+				print(MaxTransID)
 				MaxTransID=str(MaxTransID)
 				AddRows= tuple(WithTransIDAccountInfo(MaxTransID))
 				rows.insert(1,AddRows)
@@ -54,7 +56,8 @@ with conn:
 				TransIDString = TransIDString.lstrip('(')
 				TransIDString = TransIDString.rstrip(')')
 				TransIDString = TransIDString.rstrip(',')
-				TransIDList.insert(1, TransIDString)
+				TransIDInt=int(TransIDString)
+				TransIDList.insert(1, TransIDInt)
 		if not TransIDList:
 			TransIDList='e'
 		if TransIDList:
@@ -115,6 +118,11 @@ with conn:
 		,(NewTransID,AccountNum,TransactionDate,TransactionAmount,PreviousBalance,NewBalance,TransactionType))
 		cur.execute('SELECT * FROM "Transaction"')
 		rows=cur.fetchall()
+		conn.commit()
+		for row in rows:
+			print(row)
+		cur.execute('''UPDATE Accounts SET Balance=? WHERE AccountID=? ''',(NewBalance,AccountNum))
+		rows = cur.fetchall()
 		conn.commit()
 		for row in rows:
 			print(row)
