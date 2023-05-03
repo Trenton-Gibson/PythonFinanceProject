@@ -55,10 +55,12 @@ class FinanceGUI:
 												command=self.AddDeleteWindow)
 		self.AccOverTransferMoneyButton = tk.Button(self.AccOverBotFrame, text='Transfer Money',
 													command=self.TransferMoneyWindow)
+		self.AccOverTransactionHistoryButton=tk.Button(self.AccOverBotFrame,text='Transaction History',command=self.TransactionHistoryWindow)
 		self.AccOverQuitButton = tk.Button(self.AccOverBotFrame, text='Quit', command=self.AccountOverview.destroy)
 		self.AccOverHandleAccountButton.pack(side='left', pady=10)
 		self.AccOverAddDeleteButton.pack(side='left', pady=10)
 		self.AccOverTransferMoneyButton.pack(side='left', pady=10)
+		self.AccOverTransactionHistoryButton.pack(side='left', pady=10)
 		self.AccOverQuitButton.pack(side='left', pady=10)
 		# Start the mainloop
 		tk.mainloop()
@@ -92,14 +94,18 @@ class FinanceGUI:
 		self.IntialBalanceLabel.pack()
 		self.IntialBalanceEntry.pack()
 		# Widgets for middle frame
-		self.ExistingAccountsLabel = tk.Label(self.AddDelMidFrame, text='Existing Accounts')
-		self.ExistingAccountsListbox = tk.Listbox(self.AddDelMidFrame)
+		self.ExistingAccountsLabel = tk.Label(self.AddDelMidFrame, text='Click Account you wish to delete\n then click Delete Account Button.')
+		self.ExistingAccountsListbox = tk.Listbox(self.AddDelMidFrame,selectmode=tk.SINGLE)
+		self.AccountNames=FinanceProjectDatabaseAccess.AccountName()
+		print(self.AccountNames)
+		for row in self.AccountNames:
+			self.ExistingAccountsListbox.insert(tk.END,row)
 		# pack middle frame widgets
 		self.ExistingAccountsLabel.pack()
 		self.ExistingAccountsListbox.pack()
 		# Widgets for bottom frame
-		self.AddAccountButton = tk.Button(self.AddDelBotFrame, text='Add Account')
-		self.DeleteAccountButton = tk.Button(self.AddDelBotFrame, text='Delete Account')
+		self.AddAccountButton = tk.Button(self.AddDelBotFrame, text='Add Account',command=self.AddAccount)
+		self.DeleteAccountButton = tk.Button(self.AddDelBotFrame, text='Delete Account',command=self.DeleteAccount)
 		self.AddDelReturnParentWindowButton = tk.Button(self.AddDelBotFrame, text='Return to Parent Window',
 														command=self.ReturnParentWindowAddDel)
 		self.AddDelQuitButton = tk.Button(self.AddDelBotFrame, text='Quit Program',
@@ -211,6 +217,58 @@ class FinanceGUI:
 		self.ConfirmTransferButton.pack(side='left')
 		self.TransMonReturnParentWindowButton.pack(side='left')
 		self.TransMonQuitButton.pack(side='left')
+	def TransactionHistoryWindow(self):
+		# remove account overview window
+		self.AccountOverview.destroy()
+		# create transfer money window
+		self.TransactionHistory = tk.Tk()
+		self.TransactionHistory.title('Transaction History')
+		#create frames
+		self.TransHisTopFrame=tk.Frame(self.TransactionHistory)
+		self.TransHisMidFrame = tk.Frame(self.TransactionHistory)
+		self.TransHisBotFrame = tk.Frame(self.TransactionHistory)
+		self.TransHisTopFrame.pack()
+		self.TransHisMidFrame.pack()
+		self.TransHisBotFrame.pack()
+		#create top frame widget
+		self.AccountHistoryLabel=tk.Label(self.TransHisTopFrame,text='Name account you want to show history of or type all to show all:')
+		self.AccountHistoryEntry=tk.Entry(self.TransHisTopFrame,width=50)
+		self.AccountHistoryLabel.pack(side='left')
+		self.AccountHistoryEntry.pack(side='left')
+		#create mid frame widget
+		self.TransHisTransactionInfo = ttk.Treeview(self.TransHisMidFrame,
+		columns=('column1', 'column2', 'column3', 'column4', 'column5','column6'), show='headings')
+		self.TransHisTransactionInfo['columns'] = (
+		'AccountID', 'Account Type', 'Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
+		self.TransHisTransactionInfo.column('AccountID', width=100)
+		self.TransHisTransactionInfo.heading("#1", text="AccountID")
+		self.TransHisTransactionInfo.column('Account Type', width=100)
+		self.TransHisTransactionInfo.heading("#2", text="Account Type")
+		self.TransHisTransactionInfo.column('Balance', width=100)
+		self.TransHisTransactionInfo.heading("#3", text="Balance")
+		self.TransHisTransactionInfo.column('TransactionID', width=100)
+		self.TransHisTransactionInfo.heading("#4", text="TransactionID")
+		self.TransHisTransactionInfo.pack()
+		self.TransHisTransactionInfo.column('Money Transferred', width=150)
+		self.TransHisTransactionInfo.heading("#5", text="Money Transferred")
+		self.TransHisTransactionInfo.pack()
+		self.TransHisTransactionInfo.column('Date of Transaction', width=150)
+		self.TransHisTransactionInfo.heading("#6", text="Date of Transaction")
+		self.TransHisTransactionInfo.pack()
+		rows = FinanceProjectDatabaseAccess.TransactionHistory()
+		for row in rows:
+			self.TransHisTransactionInfo.insert("", tk.END, values=row)
+		#create bottom frame widgets
+		self.TransHisReturnParentButton = tk.Button(self.TransHisBotFrame, text='Return to Parent Window',
+		command=self.ReturnParentWindowTransHis)
+		self.AccountHistoryButton = tk.Button(self.TransHisBotFrame, text="Account's Transaction History",
+	  	command=self.AccountHistory)
+		self.TransHisQuitButton = tk.Button(self.TransHisBotFrame, text='Quit Program',
+		command=self.TransactionHistory.destroy)
+		self.TransHisReturnParentButton.pack(side='left')
+		self.AccountHistoryButton.pack(side='left')
+		self.TransHisQuitButton.pack(side='left')
+	#End of Window Methods
 	# Additional Methods
 	def ReturnParentWindowAddDel(self):
 		self.AddDeleteAccount.destroy()
@@ -222,6 +280,9 @@ class FinanceGUI:
 		
 	def ReturnParentWindowTransMon(self):
 		self.TransferMoney.destroy()
+		FinanceGUI()
+	def ReturnParentWindowTransHis(self):
+		self.TransactionHistory.destroy()
 		FinanceGUI()
 	def TransDataAndTransCommit(self):
 		# Get data for Transaction
@@ -240,6 +301,39 @@ class FinanceGUI:
 		rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
 		for row in rows:
 			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
-	
+	def AddAccount(self):
+		self.AccountName=self.NameAccountEntry.get()
+		self.IntialBalance=self.IntialBalanceEntry.get()
+		FinanceProjectDatabaseAccess.AddDelAddAccount(self.IntialBalance,self.AccountName)
+		self.ExistingAccountsListbox.delete(0, END)
+		self.AccountNames = FinanceProjectDatabaseAccess.AccountName()
+		print(self.AccountNames)
+		for row in self.AccountNames:
+			self.ExistingAccountsListbox.insert(tk.END, row)
+	def DeleteAccount(self):
+		AccountToDelete=self.ExistingAccountsListbox.get(self.ExistingAccountsListbox.curselection())
+		print(AccountToDelete)
+		for item in AccountToDelete:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			AccountToDelete=String
+		FinanceProjectDatabaseAccess.AddDelDeleteAccount(AccountToDelete)
+		self.ExistingAccountsListbox.delete(0,END)
+		self.AccountNames = FinanceProjectDatabaseAccess.AccountName()
+		print(self.AccountNames)
+		for row in self.AccountNames:
+			self.ExistingAccountsListbox.insert(tk.END, row)
+	def AccountHistory(self):
+		AccountHistory=self.AccountHistoryEntry.get()
+		TransactionAccountHistory=FinanceProjectDatabaseAccess.AccountTransactionHistory(AccountHistory)
+		print(TransactionAccountHistory)
+		for item in self.TransHisTransactionInfo.get_children():
+			self.TransHisTransactionInfo.delete(item)
+		for row in TransactionAccountHistory:
+			print(row)
+			self.TransHisTransactionInfo.insert("", tk.END, values=row)
 # Call the Finance GUI Class
-FinanceGUI()
+if __name__ == '__main__':
+	FinanceGUI()

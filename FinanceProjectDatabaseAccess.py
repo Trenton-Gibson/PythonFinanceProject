@@ -18,10 +18,8 @@ with conn:
 		AddRows=()
 		for item in AccountIDs:
 			TransIDList= TransIDProcessing(item)
-			print(TransIDList)
 			if 'e' not in TransIDList:
 				MaxTransID = max(TransIDList)
-				print(MaxTransID)
 				MaxTransID=str(MaxTransID)
 				AddRows= tuple(WithTransIDAccountInfo(MaxTransID))
 				rows.insert(1,AddRows)
@@ -90,7 +88,6 @@ with conn:
 		cur = conn.cursor()
 		if len(TransactionAmount)>0:
 			TransactionAmount=float(TransactionAmount)
-			print(TransactionAmount)
 		AccountNum=AccountInfo[0]
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
 		PreviousBalance =cur.fetchall()
@@ -103,30 +100,67 @@ with conn:
 		PreviousBalance = float(PreviousBalance)
 		if TransactionAmount!=0:
 			NewBalance=PreviousBalance+TransactionAmount
-			print(NewBalance)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID=cur.fetchall()
-		print(TransID)
 		for item in TransID:
 			String = str(item)
 			String = String.lstrip('(')
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			NewTransID=int(String)+1
-			print(NewTransID)
 		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,?,?,?,?,?)'''
 		,(NewTransID,AccountNum,TransactionDate,TransactionAmount,PreviousBalance,NewBalance,TransactionType))
 		cur.execute('SELECT * FROM "Transaction"')
 		rows=cur.fetchall()
 		conn.commit()
-		for row in rows:
-			print(row)
 		cur.execute('''UPDATE Accounts SET Balance=? WHERE AccountID=? ''',(NewBalance,AccountNum))
 		rows = cur.fetchall()
 		conn.commit()
-		for row in rows:
-			print(row)
 		conn.close()
+	def AddDelAddAccount(Balance,AccountType):
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		cur.execute('''INSERT INTO Accounts (Balance,Account_Type)VALUES(?,?)''',(Balance,AccountType))
+		conn.commit()
+		conn.close()
+	def AccountName():
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		cur.execute('SELECT Account_Type FROM Accounts')
+		AccountName=cur.fetchall()
+		conn.close
+		return AccountName
+	def AddDelDeleteAccount(ToBeDeletedAccount):
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		cur.execute('''DELETE FROM Accounts WHERE Account_Type=?''',(ToBeDeletedAccount,))
+		conn.commit()
+		conn.close()
+	def TransactionHistory():
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
+		"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
+		"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
+		TransactionHistory=cur.fetchall()
+		conn.close()
+		return TransactionHistory
+	def AccountTransactionHistory(AccountHistory):
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		print(AccountHistory)
+		if AccountHistory=='All' or AccountHistory =='all':
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
+			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
+			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
+		else:
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
+			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
+			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
+			(AccountHistory,))
+		AccountTransactionHistory=cur.fetchall()
+		conn.close()
+		return AccountTransactionHistory
 if __name__ == '__main__':
 	AccOverDataWithTransID()
 	AccOverDataWithoutTransID()
