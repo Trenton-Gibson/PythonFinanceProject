@@ -97,7 +97,6 @@ class FinanceGUI:
 		self.ExistingAccountsLabel = tk.Label(self.AddDelMidFrame, text='Click Account you wish to delete\n then click Delete Account Button.')
 		self.ExistingAccountsListbox = tk.Listbox(self.AddDelMidFrame,selectmode=tk.SINGLE)
 		self.AccountNames=FinanceProjectDatabaseAccess.AccountName()
-		print(self.AccountNames)
 		for row in self.AccountNames:
 			self.ExistingAccountsListbox.insert(tk.END,row)
 		# pack middle frame widgets
@@ -189,10 +188,12 @@ class FinanceGUI:
 		#create frames
 		self.TransMonTopFrame=tk.Frame(self.TransferMoney)
 		self.TransMonTopMidFrame=tk.Frame(self.TransferMoney)
+		self.TransMonTrueMidFrame = tk.Frame(self.TransferMoney)
 		self.TransMonBotMidFrame=tk.Frame(self.TransferMoney)
 		self.TransMonBotFrame=tk.Frame(self.TransferMoney)
 		self.TransMonTopFrame.pack()
 		self.TransMonTopMidFrame.pack()
+		self.TransMonTrueMidFrame.pack()
 		self.TransMonBotMidFrame.pack()
 		self.TransMonBotFrame.pack()
 		#Create top frame widget
@@ -201,22 +202,61 @@ class FinanceGUI:
 		self.GivingAccountLabel.pack(side='left')
 		self.RecipientAccountLabel.pack(side='right')
 		#Create middle top frame widgets
-		self.GivingAccountListbox=tk.Listbox(self.TransMonTopMidFrame)
-		self.RecipientAccountListbox=tk.Listbox(self.TransMonTopMidFrame)
+		self.GivingAccountListbox=tk.Listbox(self.TransMonTopMidFrame,selectmode=tk.SINGLE)
+		self.RecipientAccountListbox=tk.Listbox(self.TransMonTopMidFrame,selectmode=tk.SINGLE)
 		self.GivingAccountListbox.pack(side='left')
 		self.RecipientAccountListbox.pack(side='right')
+		# create widgets for true middle frame
+		self.GivingAccountButton = tk.Button(self.TransMonTrueMidFrame, text='Set Giving Account',command=self.GetGivingAccount)
+		self.RecipientAccountButton = tk.Button(self.TransMonTrueMidFrame, text='Set Recipient Account',command=self.GetRecipientAccount)
+		# Create Account Treeview
+		self.AccOverAccountsInfoTreeview = ttk.Treeview(self.TransMonTopMidFrame,
+														columns=('column1', 'column2', 'column3', 'column4', 'column5',
+																 'column6'), show='headings')
+		self.AccOverAccountsInfoTreeview['columns'] = (
+		'AccountID', 'Account Type', 'Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
+		self.AccOverAccountsInfoTreeview.column('AccountID', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#1", text="AccountID")
+		self.AccOverAccountsInfoTreeview.column('Account Type', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#2", text="Account Type")
+		self.AccOverAccountsInfoTreeview.column('Balance', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#3", text="Balance")
+		self.AccOverAccountsInfoTreeview.column('TransactionID', width=100)
+		self.AccOverAccountsInfoTreeview.heading("#4", text="TransactionID")
+		self.AccOverAccountsInfoTreeview.pack()
+		self.AccOverAccountsInfoTreeview.column('Money Transferred', width=150)
+		self.AccOverAccountsInfoTreeview.heading("#5", text="Money Transferred")
+		self.AccOverAccountsInfoTreeview.pack()
+		self.AccOverAccountsInfoTreeview.column('Date of Transaction', width=150)
+		self.AccOverAccountsInfoTreeview.heading("#6", text="Date of Transaction")
+		
+		# Populate treeview with data
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		self.AccOverAccountsInfoTreeview.pack(side='left')
+		self.GivingAccountButton.pack(side='left')
+		self.RecipientAccountButton.pack(side='left')
 		#create bottom middle frame widgets
-		self.AmountTransferredLabel=tk.Label(self.TransMonBotMidFrame,text='Amount being Transferred $:')
+		self.AmountTransferredLabel=tk.Label(self.TransMonBotMidFrame,text='Amount being Transferred into Recipient $:')
 		self.AmountTransferredEntry=tk.Entry(self.TransMonBotMidFrame,width=50)
 		self.AmountTransferredLabel.pack(side='left')
 		self.AmountTransferredEntry.pack(side='left')
 		#Create bottom frame widgets
-		self.ConfirmTransferButton=tk.Button(self.TransMonBotFrame,text='Confirm Transfer')
+		self.ConfirmTransferButton=tk.Button(self.TransMonBotFrame,text='Confirm Transfer',command=self.TransferringMoney)
 		self.TransMonReturnParentWindowButton=tk.Button(self.TransMonBotFrame,text='Return to Parent Window',command=self.ReturnParentWindowTransMon)
 		self.TransMonQuitButton=tk.Button(self.TransMonBotFrame,text='Quit Program',command=self.TransferMoney.destroy)
 		self.ConfirmTransferButton.pack(side='left')
 		self.TransMonReturnParentWindowButton.pack(side='left')
 		self.TransMonQuitButton.pack(side='left')
+		#Populate listboxes with data
+		self.AccountNames = FinanceProjectDatabaseAccess.AccountName()
+		for row in self.AccountNames:
+			self.GivingAccountListbox.insert(tk.END, row)
+			self.RecipientAccountListbox.insert(tk.END, row)
 	def TransactionHistoryWindow(self):
 		# remove account overview window
 		self.AccountOverview.destroy()
@@ -307,12 +347,10 @@ class FinanceGUI:
 		FinanceProjectDatabaseAccess.AddDelAddAccount(self.IntialBalance,self.AccountName)
 		self.ExistingAccountsListbox.delete(0, END)
 		self.AccountNames = FinanceProjectDatabaseAccess.AccountName()
-		print(self.AccountNames)
 		for row in self.AccountNames:
 			self.ExistingAccountsListbox.insert(tk.END, row)
 	def DeleteAccount(self):
 		AccountToDelete=self.ExistingAccountsListbox.get(self.ExistingAccountsListbox.curselection())
-		print(AccountToDelete)
 		for item in AccountToDelete:
 			String = str(item)
 			String = String.lstrip('(')
@@ -322,18 +360,35 @@ class FinanceGUI:
 		FinanceProjectDatabaseAccess.AddDelDeleteAccount(AccountToDelete)
 		self.ExistingAccountsListbox.delete(0,END)
 		self.AccountNames = FinanceProjectDatabaseAccess.AccountName()
-		print(self.AccountNames)
 		for row in self.AccountNames:
 			self.ExistingAccountsListbox.insert(tk.END, row)
 	def AccountHistory(self):
-		AccountHistory=self.AccountHistoryEntry.get()
-		TransactionAccountHistory=FinanceProjectDatabaseAccess.AccountTransactionHistory(AccountHistory)
-		print(TransactionAccountHistory)
+		self.AccountHistory=self.AccountHistoryEntry.get()
+		TransactionAccountHistory=FinanceProjectDatabaseAccess.AccountTransactionHistory(self.AccountHistory)
 		for item in self.TransHisTransactionInfo.get_children():
 			self.TransHisTransactionInfo.delete(item)
 		for row in TransactionAccountHistory:
-			print(row)
 			self.TransHisTransactionInfo.insert("", tk.END, values=row)
+	def TransferringMoney(self):
+		self.TransferredMoney=self.AmountTransferredEntry.get()
+		self.TransMonGivingAccount = self.GivingAccount
+		self.TransMonRecipientAccount = self.RecipientAccount
+		FinanceProjectDatabaseAccess.AccountTransfer\
+		(self.TransferredMoney,self.TransMonGivingAccount,self.TransMonRecipientAccount)
+		for item in self.AccOverAccountsInfoTreeview.get_children():
+			self.AccOverAccountsInfoTreeview.delete(item)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+		rows = FinanceProjectDatabaseAccess.AccOverDataWithoutTransID()
+		for row in rows:
+			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
+	def GetGivingAccount(self):
+		self.GivingAccount = self.GivingAccountListbox.get(self.GivingAccountListbox.curselection())
+		return self.GivingAccount
+	def GetRecipientAccount(self):
+		self.RecipientAccount = self.RecipientAccountListbox.get(self.RecipientAccountListbox.curselection())
+		return self.RecipientAccount
 # Call the Finance GUI Class
 if __name__ == '__main__':
 	FinanceGUI()

@@ -148,7 +148,6 @@ with conn:
 	def AccountTransactionHistory(AccountHistory):
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
-		print(AccountHistory)
 		if AccountHistory=='All' or AccountHistory =='all':
 			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
@@ -161,6 +160,86 @@ with conn:
 		AccountTransactionHistory=cur.fetchall()
 		conn.close()
 		return AccountTransactionHistory
+	def AccountTransfer(AmountTransferred,GivingAccount,RecipientAccount):
+		conn = lite.connect('PythonFinanaces.db')
+		cur = conn.cursor()
+		AmountTransferred=int(AmountTransferred)
+		for item in RecipientAccount:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			RecipientAccount=String
+		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
+		TransID = cur.fetchall()
+		for item in TransID:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			NewTransID=int(String)+1
+		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''',(RecipientAccount,))
+		AccountNum=cur.fetchall()
+		for item in AccountNum:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			AccountNum=int(String)
+		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?', (AccountNum,))
+		PreviousBalance = cur.fetchall()
+		for item in PreviousBalance:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			PreviousBalance = (String)
+		PreviousBalance = float(PreviousBalance)
+		NewBalance = PreviousBalance + AmountTransferred
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Recipient of transfer')'''
+		,(NewTransID,AccountNum,AmountTransferred,PreviousBalance,NewBalance))
+		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
+					(AmountTransferred, RecipientAccount))
+		AmountTransferred=int(AmountTransferred)
+		AmountTransferred=-abs(AmountTransferred)
+		for item in GivingAccount:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			GivingAccount=String
+		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
+		TransID = cur.fetchall()
+		for item in TransID:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			NewTransID = int(String) + 1
+		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''', (GivingAccount,))
+		AccountNum = cur.fetchall()
+		for item in AccountNum:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			AccountNum = int(String)
+		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?', (AccountNum,))
+		PreviousBalance = cur.fetchall()
+		for item in PreviousBalance:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			PreviousBalance = (String)
+		PreviousBalance = float(PreviousBalance)
+		NewBalance = PreviousBalance + AmountTransferred
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Transfer')'''
+					, (NewTransID, AccountNum, AmountTransferred, PreviousBalance, NewBalance))
+		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
+					(AmountTransferred, GivingAccount))
+		conn.commit()
+		conn.close()
 if __name__ == '__main__':
 	AccOverDataWithTransID()
 	AccOverDataWithoutTransID()
