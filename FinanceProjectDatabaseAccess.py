@@ -149,11 +149,11 @@ with conn:
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
 		if AccountHistory=='All' or AccountHistory =='all':
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
 		else:
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
 			(AccountHistory,))
@@ -164,12 +164,6 @@ with conn:
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
 		AmountTransferred=int(AmountTransferred)
-		for item in RecipientAccount:
-			String = str(item)
-			String = String.lstrip('(')
-			String = String.rstrip(')')
-			String = String.rstrip(',')
-			RecipientAccount=String
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -202,12 +196,6 @@ with conn:
 					(AmountTransferred, RecipientAccount))
 		AmountTransferred=int(AmountTransferred)
 		AmountTransferred=-abs(AmountTransferred)
-		for item in GivingAccount:
-			String = str(item)
-			String = String.lstrip('(')
-			String = String.rstrip(')')
-			String = String.rstrip(',')
-			GivingAccount=String
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
