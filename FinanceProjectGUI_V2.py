@@ -76,24 +76,26 @@ class FinanceGUI:
 		self.TransHisTransactionInfo = ttk.Treeview(self.TransactionTreeviewFrame,height=20,
 													columns=(
 														'column1', 'column2', 'column3', 'column4', 'column5',
-														'column6'),
+														'column6','column7'),
 													show='headings')
 		self.TransHisTransactionInfo['columns'] = (
-			'AccountID', 'Account Type', 'Previous Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
+			'AccountID', 'Account Type', 'Previous Balance','Current Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
 		self.TransHisTransactionInfo.column('AccountID', width=100)
 		self.TransHisTransactionInfo.heading("#1", text="AccountID")
 		self.TransHisTransactionInfo.column('Account Type', width=100)
 		self.TransHisTransactionInfo.heading("#2", text="Account Type")
 		self.TransHisTransactionInfo.column('Previous Balance', width=100)
 		self.TransHisTransactionInfo.heading("#3", text="Previous Balance")
+		self.TransHisTransactionInfo.column('Current Balance',width=100)
+		self.TransHisTransactionInfo.heading("#4", text="Current Balance")
 		self.TransHisTransactionInfo.column('TransactionID', width=100)
-		self.TransHisTransactionInfo.heading("#4", text="TransactionID")
+		self.TransHisTransactionInfo.heading("#5", text="TransactionID")
 		self.TransHisTransactionInfo.pack()
 		self.TransHisTransactionInfo.column('Money Transferred', width=150)
-		self.TransHisTransactionInfo.heading("#5", text="Money Transferred")
+		self.TransHisTransactionInfo.heading("#6", text="Money Transferred")
 		self.TransHisTransactionInfo.pack()
 		self.TransHisTransactionInfo.column('Date of Transaction', width=150)
-		self.TransHisTransactionInfo.heading("#6", text="Date of Transaction")
+		self.TransHisTransactionInfo.heading("#7", text="Date of Transaction")
 		self.TransHisTransactionInfo.pack(side='left')
 		self.StartAccountHistory='all'
 		rows = FinanceProjectDatabaseAccess.AccountTransactionHistory(self.StartAccountHistory)

@@ -149,11 +149,11 @@ with conn:
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
 		if AccountHistory=='All' or AccountHistory =='all':
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,"
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
 		else:
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,"
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
 			(AccountHistory,))
@@ -163,7 +163,7 @@ with conn:
 	def AccountTransfer(AmountTransferred,GivingAccount,RecipientAccount):
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
-		AmountTransferred=int(AmountTransferred)
+		AmountTransferred=float(AmountTransferred)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -194,8 +194,8 @@ with conn:
 		,(NewTransID,AccountNum,AmountTransferred,PreviousBalance,NewBalance))
 		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
 					(AmountTransferred, RecipientAccount))
-		AmountTransferred=int(AmountTransferred)
-		AmountTransferred=-abs(AmountTransferred)
+		AmountTransferred=float(AmountTransferred)
+		AmountTransferred=-(AmountTransferred)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
