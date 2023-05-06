@@ -31,14 +31,16 @@ class FinanceGUI:
 		self.TransferMoneyFrame=Frame(self.TopFrame,relief=SUNKEN,borderwidth=10)
 		self.AddDeleteAccountFrame=Frame(self.TopFrame,relief=SUNKEN,borderwidth=10)
 		self.TransactionHistoryFrame=Frame(self.TopMidFrame,relief=SUNKEN,borderwidth=10)
+		self.TransferMoneyLabelsFrame=Frame(self.TopFrame,relief=SUNKEN,borderwidth=10)
 		#pack parent frames
 		self.TopFrame.pack()
 		self.TopMidFrame.pack()
 		self.BottomMidFrame.pack()
 		self.BottomFrame.pack()
 		#pack child frame
-		self.AddDeleteAccountFrame.pack(side='left', anchor=tk.W, padx=150)
-		self.TransferMoneyFrame.pack(side='right', anchor=tk.E, padx=300)
+		self.AddDeleteAccountFrame.pack(side='left', padx=50)
+		self.TransferMoneyLabelsFrame.pack(side='right',padx=50)
+		self.TransferMoneyFrame.pack(side='right', padx=50)
 		self.HandleAccountFrame.pack(side='left',padx=200)
 		self.TransactionHistoryFrame.pack(side='left',padx=200)
 		self.ButtonsFrame.pack(side='bottom')
@@ -74,9 +76,7 @@ class FinanceGUI:
 		for row in rows:
 			self.AccOverAccountsInfoTreeview.insert("", tk.END, values=row)
 		self.TransHisTransactionInfo = ttk.Treeview(self.TransactionTreeviewFrame,height=20,
-													columns=(
-														'column1', 'column2', 'column3', 'column4', 'column5',
-														'column6','column7'),
+		columns=('column1', 'column2', 'column3', 'column4', 'column5','column6','column7'),
 													show='headings')
 		self.TransHisTransactionInfo['columns'] = (
 			'AccountID', 'Account Type', 'Previous Balance','Current Balance', 'TransactionID', 'Money Transferred', 'Date of Transaction')
@@ -147,6 +147,11 @@ class FinanceGUI:
 		self.AmountTransferredEntry.pack()
 		self.GivingAccountButton.pack()
 		self.RecipientAccountButton.pack()
+		# Transfer money label frames
+		self.GiverAccountLabel=tk.Label(self.TransferMoneyLabelsFrame,text='Giving Account:',font='Algerian')
+		self.RecipientAccountLabel = tk.Label(self.TransferMoneyLabelsFrame,text='Recipient Account:',font='Algerian')
+		self.GiverAccountLabel.pack()
+		self.RecipientAccountLabel.pack()
 		#handle account frame widgets
 		self.TransactionLabel = tk.Label(self.HandleAccountFrame,
 										 text='Enter the transaction amount here\n(negative amount for costs and postive for income):')
@@ -264,6 +269,8 @@ class FinanceGUI:
 			self.TransHisTransactionInfo.delete(item)
 		for row in TransactionAccountHistory:
 			self.TransHisTransactionInfo.insert("", tk.END, values=row)
+		self.GiverAccountLabel.config(text='Giving Account:',font='Algerian')
+		self.RecipientAccountLabel.config(text='Recipient Account:')
 	
 	def GetGivingAccount(self):
 		self.selected = self.AccOverAccountsInfoTreeview.focus()
@@ -278,6 +285,7 @@ class FinanceGUI:
 			self.GivingAccount = String
 			if count > 1:
 				break
+		self.GiverAccountLabel.config(text='Giving Account:'+self.GivingAccount)
 		return self.GivingAccount
 	
 	def GetRecipientAccount(self):
@@ -293,8 +301,9 @@ class FinanceGUI:
 			self.RecipientAccount = String
 			if count > 1:
 				break
+		self.RecipientAccountLabel.config(text='Giving Account:' + self.RecipientAccount)
 		return self.RecipientAccount
-
+		
 # Call the Finance GUI Class
 if __name__ == '__main__':
 	FinanceGUI()
