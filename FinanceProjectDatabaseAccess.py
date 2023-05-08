@@ -88,6 +88,7 @@ with conn:
 		cur = conn.cursor()
 		if len(TransactionAmount)>0:
 			TransactionAmount=float(TransactionAmount)
+			TransactionAmount = round(TransactionAmount, 2)
 		AccountNum=AccountInfo[0]
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
 		PreviousBalance =cur.fetchall()
@@ -98,8 +99,10 @@ with conn:
 			String = String.rstrip(',')
 			PreviousBalance=(String)
 		PreviousBalance = float(PreviousBalance)
+		PreviousBalance = round(PreviousBalance, 2)
 		if TransactionAmount!=0:
 			NewBalance=PreviousBalance+TransactionAmount
+			NewBalance = round(NewBalance, 2)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID=cur.fetchall()
 		for item in TransID:
@@ -148,12 +151,12 @@ with conn:
 	def AccountTransactionHistory(AccountHistory):
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
-		if AccountHistory=='All' or AccountHistory =='all':
+		if AccountHistory=='':
 			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
 		else:
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance'Transaction'.New_Balance,"
+			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
 			(AccountHistory,))
@@ -164,6 +167,7 @@ with conn:
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
 		AmountTransferred=float(AmountTransferred)
+		AmountTransferred = round(AmountTransferred, 2)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -189,13 +193,16 @@ with conn:
 			String = String.rstrip(',')
 			PreviousBalance = (String)
 		PreviousBalance = float(PreviousBalance)
+		PreviousBalance = round(PreviousBalance, 2)
 		NewBalance = PreviousBalance + AmountTransferred
+		NewBalance = round(NewBalance, 2)
 		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Recipient of transfer')'''
 		,(NewTransID,AccountNum,AmountTransferred,PreviousBalance,NewBalance))
 		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
 					(AmountTransferred, RecipientAccount))
 		AmountTransferred=float(AmountTransferred)
 		AmountTransferred=-(AmountTransferred)
+		AmountTransferred = round(AmountTransferred, 2)
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -221,7 +228,9 @@ with conn:
 			String = String.rstrip(',')
 			PreviousBalance = (String)
 		PreviousBalance = float(PreviousBalance)
+		PreviousBalance = round(PreviousBalance, 2)
 		NewBalance = PreviousBalance + AmountTransferred
+		NewBalance = round(NewBalance, 2)
 		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Transfer')'''
 					, (NewTransID, AccountNum, AmountTransferred, PreviousBalance, NewBalance))
 		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
