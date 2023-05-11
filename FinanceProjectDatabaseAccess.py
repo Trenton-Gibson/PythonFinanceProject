@@ -4,35 +4,55 @@
 
 # import sqlite resources
 import sqlite3 as lite
-import sys
 
+#establish a connection with the finances database
 conn = lite.connect('PythonFinanaces.db')
 
 with conn:
-	#Gets AccountIDs with Transactions
+	#Gets AccountIDs with Transactions and
+	# returns the info on the latest transaction for that account
 	def AccOverDataWithTransID():
+		#connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#Gets a list of all the account IDs in integer form
 		AccountIDs = AccountOverviewTreeviewDataFiltering()
+		# create a rows list and add rows tuple
+		#rows list holds data for the lastest transaction in that account
+		#AddRows tuple receives the data from the queries acquiring data on the most recent transaction for an account
 		rows=[]
 		AddRows=()
+		#loop acquires all data for accounts with transactionIDs
 		for item in AccountIDs:
+			#gets a list of all the transactionIDs in integer form
 			TransIDList= TransIDProcessing(item)
+			#if an account doesn't have transactions recorded for it TransIDList will equal 'e'
+			# and thus won't get access to the core code
 			if 'e' not in TransIDList:
+				#we get the highest transactionID because it will be the most recent.
+				#turn into a string so it can be processed
+				#get all the info for the account and its most recent transaction
+				#and put it in the rows list to populate the account treeview
 				MaxTransID = max(TransIDList)
 				MaxTransID=str(MaxTransID)
 				AddRows= tuple(WithTransIDAccountInfo(MaxTransID))
 				rows.insert(1,AddRows)
+		#close the database and return our data
 		conn.close()
 		return rows
-		
 	
+		
+	#transforms the all the accountsID from tuple into usable integer form
 	def AccountOverviewTreeviewDataFiltering():
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#get all the accountIds from the database
 		cur.execute("SELECT AccountID FROM Accounts")
 		rows = list(cur.fetchall())
+		# make an empty list to put all the transformed account Ids in
 		AccIDList = []
+		#turns each tuple value and into an integer and puts it in the AccIDList
 		for item in rows:
 			AccIDString = str(item)
 			AccIDString = AccIDString.lstrip('(')
@@ -40,15 +60,25 @@ with conn:
 			AccIDString = AccIDString.rstrip(',')
 			AccIDInt = int(AccIDString)
 			AccIDList.insert(1, AccIDInt)
+		#sends out the list of account IDs
 		return AccIDList
 	
+	
+	#Gets a list of transactionIDs in integer form, instead of tuple,
+	# so we can determine the most recent transaction ID for an account(the highest integer)
 	def TransIDProcessing(AccountID):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#get all the transactionIDs for a specific account
 		cur.execute("SELECT TransactionID FROM 'Transaction' WHERE AccountID=?", (AccountID,))
 		TransID = cur.fetchall()
+		#create a list that will be filled with TransactionIDs
+		#that have been transformed from tuple into integer
 		TransIDList = []
+		#if there isn't anything in the list it can't access the core code
 		if len(TransID)>0:
+			#turns each TransactionID into integer form and inserts it into list
 			for item in TransID:
 				TransIDString = str(item)
 				TransIDString = TransIDString.lstrip('(')
@@ -56,118 +86,161 @@ with conn:
 				TransIDString = TransIDString.rstrip(',')
 				TransIDInt=int(TransIDString)
 				TransIDList.insert(1, TransIDInt)
+		#close the database
+		conn.close()
+		#If there's no data in the list it will equal 'e'
 		if not TransIDList:
 			TransIDList='e'
+		#if the list has data in it return the list and closes the database
 		if TransIDList:
 			return TransIDList
+		
+		
+		
+	#gets the account info for accounts with transaction records
 	def WithTransIDAccountInfo(MaxTransID):
+		# connect to the database and make a cursor
 		conn=lite.connect('PythonFinanaces.db')
 		cur=conn.cursor()
+		#get all the data from the database for accounts with transactions
 		cur.execute('''SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,
 		'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction
 		FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID
 		WHERE TransactionID=?''',(MaxTransID,))
 		rows = cur.fetchall()
+		#turn the rows into a string
 		for item in rows:
 			String =item
 			break
 		rows=String
+		#close the database and return rows
 		conn.close()
 		return rows
+	
+	
 	#Get Accounts without Transactions
 	def AccOverDataWithoutTransID():
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#get the data for accounts without transaction records
 		cur.execute('''SELECT AccountID,Account_Type,Balance FROM Accounts
 		WHERE AccountID NOT IN (SELECT AccountID FROM 'Transaction') ''')
 		rows=cur.fetchall()
+		# close the database and return rows
 		conn.close()
 		return rows
+	
+	
+	#Inserts transaction record for a specific account
 	def HandleAccount(AccountInfo,TransactionDate,TransactionAmount,TransactionType):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#if the transaction amount isn't empty,
+		#convert the transaction into float and round it to two decimals
 		if len(TransactionAmount)>0:
 			TransactionAmount=float(TransactionAmount)
 			TransactionAmount = round(TransactionAmount, 2)
+		#get the account number
 		AccountNum=AccountInfo[0]
+		#retrive the previous balance for the specific account
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
 		PreviousBalance =cur.fetchall()
+		#turn previous balance tuple into string
 		for item in PreviousBalance:
 			String = str(item)
 			String = String.lstrip('(')
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			PreviousBalance=(String)
+		#turn previous balance into float and round it
 		PreviousBalance = float(PreviousBalance)
 		PreviousBalance = round(PreviousBalance, 2)
+		# if the transaction amount isn't 0,
+		#get the new balance and round it
 		if TransactionAmount!=0:
 			NewBalance=PreviousBalance+TransactionAmount
 			NewBalance = round(NewBalance, 2)
+		#select the highest transactionID
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID=cur.fetchall()
+		#Convert the maximum transaction into int
+		#and make the next transaction ID
 		for item in TransID:
 			String = str(item)
 			String = String.lstrip('(')
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			NewTransID=int(String)+1
+		#Add transaction info into database
 		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,?,?,?,?,?)'''
 		,(NewTransID,AccountNum,TransactionDate,TransactionAmount,PreviousBalance,NewBalance,TransactionType))
-		cur.execute('SELECT * FROM "Transaction"')
 		rows=cur.fetchall()
+		#commit the data
 		conn.commit()
+		#add the new balance for the account
 		cur.execute('''UPDATE Accounts SET Balance=? WHERE AccountID=? ''',(NewBalance,AccountNum))
 		rows = cur.fetchall()
+		#commit the data and close the database
 		conn.commit()
 		conn.close()
-	def AddDelAddAccount(Balance,AccountType):
+		
+		
+	#add account into database
+	def AddAccount(Balance,AccountType):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#insert the new account data, commit the data, and close the database
 		cur.execute('''INSERT INTO Accounts (Balance,Account_Type)VALUES(?,?)''',(Balance,AccountType))
 		conn.commit()
 		conn.close()
-	def AccountName():
+
+
+	#Deletes selected account
+	def DeleteAccount(ToBeDeletedAccount):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
-		cur.execute('SELECT Account_Type FROM Accounts')
-		AccountName=cur.fetchall()
-		conn.close
-		return AccountName
-	def AddDelDeleteAccount(ToBeDeletedAccount):
-		conn = lite.connect('PythonFinanaces.db')
-		cur = conn.cursor()
+		#delete specified account from the database,commit the deletion, close the database
 		cur.execute('''DELETE FROM Accounts WHERE Account_Type=?''',(ToBeDeletedAccount,))
 		conn.commit()
 		conn.close()
-	def TransactionHistory():
-		conn = lite.connect('PythonFinanaces.db')
-		cur = conn.cursor()
-		cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,"
-		"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
-		"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
-		TransactionHistory=cur.fetchall()
-		conn.close()
-		return TransactionHistory
+	
+	
+	#retrieves account transaction history for all tables or a specific table depending
 	def AccountTransactionHistory(AccountHistory):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
-		if AccountHistory=='':
+		# get the transaction history of all accounts if the argument some version of 'All'
+		if AccountHistory == 'all' or AccountHistory == 'All' or AccountHistory == 'ALL':
 			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
+		#get transaction history of account specified by argument
 		else:
 			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
 			(AccountHistory,))
+		# get data from executed SELECT statement,
+		# close the database, return the account transaction history
 		AccountTransactionHistory=cur.fetchall()
 		conn.close()
 		return AccountTransactionHistory
+	
+	
+	#Handles all the database transactions for transferring money between accounts
 	def AccountTransfer(AmountTransferred,GivingAccount,RecipientAccount):
+		# connect to the database and make a cursor
 		conn = lite.connect('PythonFinanaces.db')
 		cur = conn.cursor()
+		#transform the amount transferred parameter into float data that is rounded
 		AmountTransferred=float(AmountTransferred)
 		AmountTransferred = round(AmountTransferred, 2)
+		#obtains the highest transactionID and makes the next one
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -176,6 +249,7 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			NewTransID=int(String)+1
+		#get the account Id of the recipient account and transform it into integer data
 		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''',(RecipientAccount,))
 		AccountNum=cur.fetchall()
 		for item in AccountNum:
@@ -184,6 +258,7 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			AccountNum=int(String)
+		#get the balance for the recipient account and turn it into float data and round it
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?', (AccountNum,))
 		PreviousBalance = cur.fetchall()
 		for item in PreviousBalance:
@@ -194,15 +269,15 @@ with conn:
 			PreviousBalance = (String)
 		PreviousBalance = float(PreviousBalance)
 		PreviousBalance = round(PreviousBalance, 2)
+		#get the new balance for recipient account and insert all the data for the recipient account
 		NewBalance = PreviousBalance + AmountTransferred
 		NewBalance = round(NewBalance, 2)
-		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Recipient of transfer')'''
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date('now','-5 hours'),?,?,?,'Recipient of transfer')'''
 		,(NewTransID,AccountNum,AmountTransferred,PreviousBalance,NewBalance))
-		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
+		cur.execute('''UPDATE Accounts SET Balance=Balance+? WHERE Account_Type=?''',
 					(AmountTransferred, RecipientAccount))
-		AmountTransferred=float(AmountTransferred)
-		AmountTransferred=-(AmountTransferred)
-		AmountTransferred = round(AmountTransferred, 2)
+		cur.execute('''UPDATE Accounts SET Balance=round(Balance,2) WHERE Account_Type=?''', (RecipientAccount,))
+		# obtains the highest transactionID and makes the next one
 		cur.execute('SELECT max(TransactionID) FROM "Transaction"')
 		TransID = cur.fetchall()
 		for item in TransID:
@@ -211,6 +286,7 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			NewTransID = int(String) + 1
+		# get the account Id of the giving account and transform it into integer data
 		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''', (GivingAccount,))
 		AccountNum = cur.fetchall()
 		for item in AccountNum:
@@ -219,6 +295,7 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			AccountNum = int(String)
+		# get the balance for the giving account and turn it into float data and round it
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?', (AccountNum,))
 		PreviousBalance = cur.fetchall()
 		for item in PreviousBalance:
@@ -227,17 +304,21 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			PreviousBalance = (String)
+		#turn amount transferred, previous balance, and new balance into float data and round to the second decimal place.
+		#Amount transferred is made negative because the giving account is giving the money away.
+		#New balance is made from previous balance and the now negative amount transferred.
+		AmountTransferred = float(AmountTransferred)
+		AmountTransferred=-1*(AmountTransferred)
+		AmountTransferred = round(AmountTransferred, 2)
 		PreviousBalance = float(PreviousBalance)
 		PreviousBalance = round(PreviousBalance, 2)
 		NewBalance = PreviousBalance + AmountTransferred
 		NewBalance = round(NewBalance, 2)
-		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date(),?,?,?,'Transfer')'''
+		# make and commit database transactions for giving account, and close the database.
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date('now','-5 hours'),?,?,?,'Transfer')'''
 					, (NewTransID, AccountNum, AmountTransferred, PreviousBalance, NewBalance))
-		cur.execute('''UPDATE Accounts SET Balance=(Balance+?) WHERE Account_Type=?''',
+		cur.execute('''UPDATE Accounts SET Balance=Balance+? WHERE Account_Type=?''',
 					(AmountTransferred, GivingAccount))
+		cur.execute('''UPDATE Accounts SET Balance=round(Balance,2) WHERE Account_Type=?''',(GivingAccount,))
 		conn.commit()
 		conn.close()
-if __name__ == '__main__':
-	AccOverDataWithTransID()
-	AccOverDataWithoutTransID()
-	HandleAccount('AccountInfo','TransactionAmount','TransactionType','TransactionDate')
