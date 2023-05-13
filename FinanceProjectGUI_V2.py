@@ -36,6 +36,8 @@ class FinanceGUI:
 		##Child frames of top middle frame
 		self.TransactionHistoryFrame = Frame(self.TopMidFrame, relief=SUNKEN, borderwidth=10)
 		self.HandleAccountFrame = Frame(self.TopMidFrame, relief=SUNKEN, borderwidth=10)
+		### Child Frame of Handle account frame
+		self.EnterDateFrame=Frame(self.HandleAccountFrame)
 		##Child Frames of true middle frame
 		self.AccountTreeviewFrame = Frame(self.TrueMiddleFrame, relief=SUNKEN, borderwidth=10)
 		self.TransactionTreeviewFrame = Frame(self.TrueMiddleFrame, relief=SUNKEN, borderwidth=10)
@@ -122,9 +124,13 @@ class FinanceGUI:
 											  '\nOnly enter numbers and decimals here(negative amount for costs and postive for income):',
 										 font=('Times New Roman', 11))
 		self.TransactionEntry = tk.Entry(self.HandleAccountFrame, width=50, font=('Times New Roman', 11))
-		self.DateofTransLabel = tk.Label(self.HandleAccountFrame, text='Next, enter the date of the transaction:',
+		self.DateofTransLabel = tk.Label(self.HandleAccountFrame, text='Next, enter the date of the transaction. All answers only use numbers.',
 										 font=('Times New Roman', 11))
-		self.DateofTransEntry = tk.Entry(self.HandleAccountFrame, width=50, font=('Times New Roman', 11))
+		self.MonthofTransEntry = tk.Entry(self.EnterDateFrame, width=10, font=('Times New Roman', 11))
+		self.DateDashLabel1= tk.Label(self.EnterDateFrame,text='-')
+		self.DayofTransEntry = tk.Entry(self.EnterDateFrame, width=10, font=('Times New Roman', 11))
+		self.DateDashLabel2 = tk.Label(self.EnterDateFrame, text='-')
+		self.YearofTransEntry = tk.Entry(self.EnterDateFrame, width=10, font=('Times New Roman', 11))
 		self.TransactionTypeLabel = tk.Label(self.HandleAccountFrame,
 											 text=' Third, put in what type of transaction occured and then click Confirm Transaction button:',
 											 font=('Times New Roman', 11))
@@ -133,7 +139,12 @@ class FinanceGUI:
 		self.TransactionLabel.pack()
 		self.TransactionEntry.pack()
 		self.DateofTransLabel.pack()
-		self.DateofTransEntry.pack()
+		self.MonthofTransEntry.pack(side= LEFT)
+		self.DateDashLabel1.pack(side= LEFT)
+		self.DayofTransEntry.pack(side=  LEFT)
+		self.DateDashLabel2.pack(side= LEFT)
+		self.YearofTransEntry.pack(side= LEFT)
+		self.EnterDateFrame.pack()
 		self.TransactionTypeLabel.pack()
 		self.TransactionTypeEntry.pack()
 		
@@ -255,11 +266,19 @@ class FinanceGUI:
 			# Get data for Transaction
 			self.selected = self.AccountsInfoTreeview.focus()
 			self.Account = self.AccountsInfoTreeview.item(self.selected, 'values')
-			self.TransactionDate = self.DateofTransEntry.get()
+			self.Month=self.MonthofTransEntry.get()
+			self.Day = self.DayofTransEntry.get()
+			self.Year=self.YearofTransEntry.get()
+			self.TransactionDate=self.Month+'-'+self.Day+'-'+self.Year
 			self.TransactionAmount = self.TransactionEntry.get()
 			self.TransactionType = self.TransactionTypeEntry.get()
-			#If any of the entries are unpopulated, it sends an error message and the core code isn't executed
-			if self.TransactionDate == ''or self.TransactionAmount =='' or self.TransactionType == '':
+			#if any of the date entries can't be converted to integers then the exception handling will kick in
+			self.MonthTest= int(self.Month)
+			self.DayTest= int(self.Day)
+			self.YearTest=int(self.Year)
+			#If any of the entries are unpopulated or aren't within the proper date range, it sends an error message and the core code isn't executed
+			if self.TransactionAmount =='' or self.TransactionType == '' or self.Month=='' or self.Year==''or self.Day==''\
+			or self. MonthTest > 12 or self. MonthTest<1 or self.DayTest<0 or self.DayTest>31 or self.YearTest < 2023  :
 				# Create an error message variable
 				self.ErrorMessage = 'Error! Follow the directions and please try again.'
 				# Display the error message in an info dialog box.
@@ -271,13 +290,15 @@ class FinanceGUI:
 				# Repopulate treeviews with data after the changes are made to represent them
 				self.RepopulateAccountsTreeview()
 				self.RepopulateTransactionsTreeview()
-				self.DateofTransEntry.delete(0, END)
 				self.TransactionEntry.delete(0, END)
 				self.TransactionTypeEntry.delete(0, END)
+				self.YearofTransEntry.delete(0,END)
+				self.DayofTransEntry.delete(0,END)
+				self.MonthofTransEntry.delete(0,END)
 		except:
-			# Create an error message variable
+			#Create an error message variable
 			self.ErrorMessage ='Error! Follow the directions and please try again.'
-			# Display the error message in an info dialog box.
+			#Display the error message in an info dialog box.
 			tk.messagebox.showinfo('Error!', self.ErrorMessage)
 			
 			
@@ -287,7 +308,7 @@ class FinanceGUI:
 			#get data from the entries to create a new account
 			self.AccountName = self.NameAccountEntry.get()
 			self.IntialBalance = self.IntialBalanceEntry.get()
-			self.IntialBalance= int(self.IntialBalance)
+			self.IntialBalance= float(self.IntialBalance)
 			# If any of the entries are unpopulated, it sends an error message and the core code isn't executed
 			if self.AccountName == '' or self.IntialBalance == '':
 				# Create an error message variable
@@ -370,7 +391,7 @@ class FinanceGUI:
 			
 	#Handles transferring money between two accounts
 	def TransferringMoney(self):
-		try:
+		#try:
 			#get accounts transferring and amount of money being transferred
 			self.TransferredMoney = self.AmountTransferredEntry.get()
 			self.TransMonGivingAccount = self.GivingAccount
@@ -393,11 +414,11 @@ class FinanceGUI:
 				self.RecipientAccountLabel.config(text='Recipient Account:',font=('Times New Roman', 11), foreground='black', background='white')
 				#clear amount transferred entry
 				self.AmountTransferredEntry.delete(0,END)
-		except:
+		#except:
 			# Create an error message variable
-			self.ErrorMessage ='Error! Follow the directions and please try again.'
+			#self.ErrorMessage ='Error! Follow the directions and please try again.'
 			# Display the error message in an info dialog box.
-			tk.messagebox.showinfo('Error!', self.ErrorMessage)
+			#tk.messagebox.showinfo('Error!', self.ErrorMessage)
 	
 	
 	#gets the giving account for transferring money
@@ -412,9 +433,6 @@ class FinanceGUI:
 			for item in self.GivingAccount:
 				count += 1
 				String = str(item)
-				String = String.lstrip('(')
-				String = String.rstrip(')')
-				String = String.rstrip(',')
 				self.GivingAccount = String
 				#end the loop when the correct value is in play
 				if count > 1:
@@ -443,9 +461,6 @@ class FinanceGUI:
 			for item in self.RecipientAccount:
 				count += 1
 				String = str(item)
-				String = String.lstrip('(')
-				String = String.rstrip(')')
-				String = String.rstrip(',')
 				self.RecipientAccount = String
 				# end the loop when the correct value is in play
 				if count > 1:

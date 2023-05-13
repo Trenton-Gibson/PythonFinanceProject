@@ -6,14 +6,14 @@
 import sqlite3 as lite
 
 #establish a connection with the finances database
-conn = lite.connect('PythonFinanaces.db')
+conn = lite.connect('PythonFinances.db')
 
 with conn:
 	#Gets AccountIDs with Transactions and
 	# returns the info on the latest transaction for that account
 	def AccOverDataWithTransID():
 		#connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#Gets a list of all the account IDs in integer form
 		AccountIDs = AccountOverviewTreeviewDataFiltering()
@@ -45,7 +45,7 @@ with conn:
 	#transforms the all the accountsID from tuple into usable integer form
 	def AccountOverviewTreeviewDataFiltering():
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#get all the accountIds from the database
 		cur.execute("SELECT AccountID FROM Accounts")
@@ -68,7 +68,7 @@ with conn:
 	# so we can determine the most recent transaction ID for an account(the highest integer)
 	def TransIDProcessing(AccountID):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#get all the transactionIDs for a specific account
 		cur.execute("SELECT TransactionID FROM 'Transaction' WHERE AccountID=?", (AccountID,))
@@ -100,7 +100,7 @@ with conn:
 	#gets the account info for accounts with transaction records
 	def WithTransIDAccountInfo(MaxTransID):
 		# connect to the database and make a cursor
-		conn=lite.connect('PythonFinanaces.db')
+		conn=lite.connect('PythonFinances.db')
 		cur=conn.cursor()
 		#get all the data from the database for accounts with transactions
 		cur.execute('''SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,
@@ -121,7 +121,7 @@ with conn:
 	#Get Accounts without Transactions
 	def AccOverDataWithoutTransID():
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#get the data for accounts without transaction records
 		cur.execute('''SELECT AccountID,Account_Type,Balance FROM Accounts
@@ -135,7 +135,7 @@ with conn:
 	#Inserts transaction record for a specific account
 	def HandleAccount(AccountInfo,TransactionDate,TransactionAmount,TransactionType):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#if the transaction amount isn't empty,
 		#convert the transaction into float and round it to two decimals
@@ -172,7 +172,10 @@ with conn:
 			String = String.lstrip('(')
 			String = String.rstrip(')')
 			String = String.rstrip(',')
-			NewTransID=int(String)+1
+			if String == 'None':
+				NewTransID=1
+			else:
+				NewTransID = float(String) + 1
 		#Add transaction info into database
 		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,?,?,?,?,?)'''
 		,(NewTransID,AccountNum,TransactionDate,TransactionAmount,PreviousBalance,NewBalance,TransactionType))
@@ -190,7 +193,7 @@ with conn:
 	#add account into database
 	def AddAccount(Balance,AccountType):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#insert the new account data, commit the data, and close the database
 		cur.execute('''INSERT INTO Accounts (Balance,Account_Type)VALUES(?,?)''',(Balance,AccountType))
@@ -201,7 +204,7 @@ with conn:
 	#Deletes selected account
 	def DeleteAccount(ToBeDeletedAccount):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#delete specified account from the database,commit the deletion, close the database
 		cur.execute('''DELETE FROM Accounts WHERE Account_Type=?''',(ToBeDeletedAccount,))
@@ -212,7 +215,7 @@ with conn:
 	#retrieves account transaction history for all tables or a specific table depending
 	def AccountTransactionHistory(AccountHistory):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		# get the transaction history of all accounts if the argument some version of 'All'
 		if AccountHistory == 'all' or AccountHistory == 'All' or AccountHistory == 'ALL':
@@ -235,7 +238,7 @@ with conn:
 	#Handles all the database transactions for transferring money between accounts
 	def AccountTransfer(AmountTransferred,GivingAccount,RecipientAccount):
 		# connect to the database and make a cursor
-		conn = lite.connect('PythonFinanaces.db')
+		conn = lite.connect('PythonFinances.db')
 		cur = conn.cursor()
 		#transform the amount transferred parameter into float data that is rounded
 		AmountTransferred=float(AmountTransferred)
@@ -248,7 +251,10 @@ with conn:
 			String = String.lstrip('(')
 			String = String.rstrip(')')
 			String = String.rstrip(',')
-			NewTransID=int(String)+1
+			if TransID:
+				NewTransID=int(String)+1
+			else:
+				NewTransID=1
 		#get the account Id of the recipient account and transform it into integer data
 		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''',(RecipientAccount,))
 		AccountNum=cur.fetchall()
@@ -258,6 +264,7 @@ with conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			AccountNum=int(String)
+			
 		#get the balance for the recipient account and turn it into float data and round it
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?', (AccountNum,))
 		PreviousBalance = cur.fetchall()
