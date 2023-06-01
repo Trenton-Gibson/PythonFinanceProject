@@ -8,7 +8,9 @@ import os.path
 #Specify the specific filepath of the database so it can be used in the python interpreter
 # and establish a connection with the finances database
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(BASE_DIR)
 DIR_PATH= os.path.join(BASE_DIR, "PythonFinances.db")
+print(DIR_PATH)
 with lite.connect(DIR_PATH) as conn:
 
 	#Gets AccountIDs with Transactions and
@@ -105,8 +107,8 @@ with lite.connect(DIR_PATH) as conn:
 		conn = lite.connect(DIR_PATH)
 		cur=conn.cursor()
 		#get all the data from the database for accounts with transactions
-		cur.execute('''SELECT Accounts.AccountID,Accounts.Account_Type,Accounts.Balance,
-		'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction
+		cur.execute('''SELECT Accounts.Account_Type,Accounts.Balance,'Transaction'.Transaction_Type
+		,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction
 		FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID
 		WHERE TransactionID=?''',(MaxTransID,))
 		rows = cur.fetchall()
@@ -145,10 +147,24 @@ with lite.connect(DIR_PATH) as conn:
 			TransactionAmount=float(TransactionAmount)
 			TransactionAmount = round(TransactionAmount, 2)
 		#get the account number
-		AccountNum=AccountInfo[0]
+		UntransformedAccountInfo = str(AccountInfo[0])
+		AccountInfo=''
+		for item in UntransformedAccountInfo:
+			AccountInfo+=item
+		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''',(AccountInfo,))
+		AccountNum=cur.fetchall()
+		print(AccountNum)
+		for item in AccountNum:
+			String = str(item)
+			String = String.lstrip('(')
+			String = String.rstrip(')')
+			String = String.rstrip(',')
+			AccountNum = (String)
 		#retrive the previous balance for the specific account
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
 		PreviousBalance =cur.fetchall()
+		print(PreviousBalance)
+		
 		#turn previous balance tuple into string
 		for item in PreviousBalance:
 			String = str(item)
@@ -156,6 +172,8 @@ with lite.connect(DIR_PATH) as conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			PreviousBalance=(String)
+			print(PreviousBalance)
+		print(PreviousBalance)
 		#turn previous balance into float and round it
 		PreviousBalance = float(PreviousBalance)
 		PreviousBalance = round(PreviousBalance, 2)
@@ -221,13 +239,13 @@ with lite.connect(DIR_PATH) as conn:
 		cur = conn.cursor()
 		# get the transaction history of all accounts if the argument some version of 'All'
 		if AccountHistory == 'all' or AccountHistory == 'All' or AccountHistory == 'ALL':
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
-			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
+			cur.execute("SELECT Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
+			"'Transaction'.Transaction_Type,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")
 		#get transaction history of account specified by argument
 		else:
-			cur.execute("SELECT Accounts.AccountID,Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
-			"'Transaction'.TransactionID,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
+			cur.execute("SELECT Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
+			"'Transaction'.Transaction_Type,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID WHERE Account_Type=?",
 			(AccountHistory,))
 		# get data from executed SELECT statement,
@@ -324,7 +342,7 @@ with lite.connect(DIR_PATH) as conn:
 		NewBalance = PreviousBalance + AmountTransferred
 		NewBalance = round(NewBalance, 2)
 		# make and commit database transactions for giving account, and close the database.
-		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date('now','-5 hours'),?,?,?,'Transfer')'''
+		cur.execute('''INSERT INTO 'Transaction'VALUES(?,?,date('now','-5 hours'),?,?,?,'Giver of Transfer')'''
 					, (NewTransID, AccountNum, AmountTransferred, PreviousBalance, NewBalance))
 		cur.execute('''UPDATE Accounts SET Balance=Balance+? WHERE Account_Type=?''',
 					(AmountTransferred, GivingAccount))

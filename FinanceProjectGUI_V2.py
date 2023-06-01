@@ -156,23 +156,21 @@ class FinanceGUI:
 		##Create actual Account Treeview
 		self.AccountsInfoTreeview = ttk.Treeview(self.AccountTreeviewFrame, height=10,
 												 columns=(
-												 'column1', 'column2', 'column3', 'column4', 'column5', 'column6'),
+												 'column1', 'column2', 'column3', 'column4', 'column5'),
 												 show='headings', yscrollcommand=self.Accounts_yscroll)
 		##Define and create the columns for the Account Treeview
 		self.AccountsInfoTreeview['columns'] = (
-		'AccountID', 'Account Type', 'Balance', 'TransactionID', 'Transaction Amount', 'Date of Transaction')
-		self.AccountsInfoTreeview.column('AccountID', width=100)
-		self.AccountsInfoTreeview.heading("#1", text="AccountID")
-		self.AccountsInfoTreeview.column('Account Type', width=100)
-		self.AccountsInfoTreeview.heading("#2", text="Account Type")
-		self.AccountsInfoTreeview.column('Balance', width=100)
-		self.AccountsInfoTreeview.heading("#3", text="Balance")
-		self.AccountsInfoTreeview.column('TransactionID', width=100)
-		self.AccountsInfoTreeview.heading("#4", text="TransactionID")
-		self.AccountsInfoTreeview.column('Transaction Amount', width=150)
-		self.AccountsInfoTreeview.heading("#5", text="Transaction Amount")
-		self.AccountsInfoTreeview.column('Date of Transaction', width=150)
-		self.AccountsInfoTreeview.heading("#6", text="Date of Transaction")
+		'Account Type', 'Balance','Transaction Type','Transaction Amount', 'Date of Transaction')
+		self.AccountsInfoTreeview.column('Account Type', width=140)
+		self.AccountsInfoTreeview.heading("#1", text="Account Type")
+		self.AccountsInfoTreeview.column('Balance', width=140)
+		self.AccountsInfoTreeview.heading("#2", text="Balance")
+		self.AccountsInfoTreeview.column('Transaction Type', width=140)
+		self.AccountsInfoTreeview.heading("#3", text="Transaction Type")
+		self.AccountsInfoTreeview.column('Transaction Amount', width=140)
+		self.AccountsInfoTreeview.heading("#4", text="Transaction Amount")
+		self.AccountsInfoTreeview.column('Date of Transaction', width=140)
+		self.AccountsInfoTreeview.heading("#5", text="Date of Transaction")
 		## Pack and configure the scrollbar for the Accounts Treeview
 		self.AccountsInfoTreeview.pack(side='left')
 		self.Accounts_yscroll.config(command=self.AccountsInfoTreeview.yview)
@@ -191,26 +189,23 @@ class FinanceGUI:
 		##Create the actual Transaction Treeview
 		self.TransHisTransactionInfo = ttk.Treeview(self.TransactionTreeviewFrame, height=10,
 													columns=(
-													'column1', 'column2', 'column3', 'column4', 'column5', 'column6',
-													'column7'),
+													'column1', 'column2', 'column3', 'column4', 'column5', 'column6',),
 													show='headings', yscrollcommand=self.Transaction_yscroll.set)
 		##Define and create the columns for the Transaction Treeview
-		self.TransHisTransactionInfo['columns'] = ('AccountID', 'Account Type', 'Previous Balance', 'Current Balance',
-												   'TransactionID', 'Transaction Amount', 'Date of Transaction')
-		self.TransHisTransactionInfo.column('AccountID', width=80)
-		self.TransHisTransactionInfo.heading("#1", text="AccountID")
+		self.TransHisTransactionInfo['columns'] = ( 'Account Type', 'Previous Balance', 'Current Balance',
+												   'Transaction Type', 'Transaction Amount', 'Transaction Date')
 		self.TransHisTransactionInfo.column('Account Type', width=110)
-		self.TransHisTransactionInfo.heading("#2", text="Account Type")
-		self.TransHisTransactionInfo.column('Previous Balance', width=110)
-		self.TransHisTransactionInfo.heading("#3", text="Previous Balance")
-		self.TransHisTransactionInfo.column('Current Balance', width=110)
-		self.TransHisTransactionInfo.heading("#4", text="Current Balance")
-		self.TransHisTransactionInfo.column('TransactionID', width=110)
-		self.TransHisTransactionInfo.heading("#5", text="TransactionID")
-		self.TransHisTransactionInfo.column('Transaction Amount', width=110)
-		self.TransHisTransactionInfo.heading("#6", text="Transaction Amount")
-		self.TransHisTransactionInfo.column('Date of Transaction', width=110)
-		self.TransHisTransactionInfo.heading("#7", text="Date of Transaction")
+		self.TransHisTransactionInfo.heading("#1", text="Account Type")
+		self.TransHisTransactionInfo.column('Previous Balance', width=115)
+		self.TransHisTransactionInfo.heading("#2", text="Previous Balance")
+		self.TransHisTransactionInfo.column('Current Balance', width=105)
+		self.TransHisTransactionInfo.heading("#3", text="Current Balance")
+		self.TransHisTransactionInfo.column('Transaction Type', width=120)
+		self.TransHisTransactionInfo.heading("#4", text="Transaction Type")
+		self.TransHisTransactionInfo.column('Transaction Amount', width=130)
+		self.TransHisTransactionInfo.heading("#5", text="Transaction Amount")
+		self.TransHisTransactionInfo.column('Transaction Date', width=120)
+		self.TransHisTransactionInfo.heading("#6", text="Transaction Date")
 		##Pack the Transaction Treeview
 		self.TransHisTransactionInfo.pack(side='left')
 		##Configure the Transaction Treeview Scrollbar
@@ -262,7 +257,7 @@ class FinanceGUI:
 	# Additional Methods
 	#Handles Typical transactions.Is called by Handle Account Frame Widgets.
 	def TransDataAndTransCommit(self):
-		try:
+		#try:
 			# Get data for Transaction
 			self.selected = self.AccountsInfoTreeview.focus()
 			self.Account = self.AccountsInfoTreeview.item(self.selected, 'values')
@@ -280,6 +275,7 @@ class FinanceGUI:
 			if self.TransactionAmount =='' or self.TransactionType == '' or self.Month=='' or self.Year==''or self.Day==''\
 			or self. MonthTest > 12 or self. MonthTest<1 or self.DayTest<0 or self.DayTest>31 or self.YearTest < 2023  :
 				# Create an error message variable
+				print('dklgsj;hk')
 				self.ErrorMessage = 'Error! Follow the directions and please try again.'
 				# Display the error message in an info dialog box.
 				tk.messagebox.showinfo('Error!', self.ErrorMessage)
@@ -295,11 +291,12 @@ class FinanceGUI:
 				self.YearofTransEntry.delete(0,END)
 				self.DayofTransEntry.delete(0,END)
 				self.MonthofTransEntry.delete(0,END)
-		except:
+		#except:
+			#print('dklghuodsj;')
 			#Create an error message variable
-			self.ErrorMessage ='Error! Follow the directions and please try again.'
+			#self.ErrorMessage ='Error! Follow the directions and please try again.'
 			#Display the error message in an info dialog box.
-			tk.messagebox.showinfo('Error!', self.ErrorMessage)
+			#tk.messagebox.showinfo('Error!', self.ErrorMessage)
 			
 			
 	#Creates a new account
