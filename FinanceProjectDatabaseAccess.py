@@ -8,9 +8,7 @@ import os.path
 #Specify the specific filepath of the database so it can be used in the python interpreter
 # and establish a connection with the finances database
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(BASE_DIR)
 DIR_PATH= os.path.join(BASE_DIR, "PythonFinances.db")
-print(DIR_PATH)
 with lite.connect(DIR_PATH) as conn:
 
 	#Gets AccountIDs with Transactions and
@@ -128,7 +126,7 @@ with lite.connect(DIR_PATH) as conn:
 		conn = lite.connect(DIR_PATH)
 		cur = conn.cursor()
 		#get the data for accounts without transaction records
-		cur.execute('''SELECT AccountID,Account_Type,Balance FROM Accounts
+		cur.execute('''SELECT Account_Type,Balance FROM Accounts
 		WHERE AccountID NOT IN (SELECT AccountID FROM 'Transaction') ''')
 		rows=cur.fetchall()
 		# close the database and return rows
@@ -153,7 +151,6 @@ with lite.connect(DIR_PATH) as conn:
 			AccountInfo+=item
 		cur.execute('''SELECT AccountID FROM Accounts WHERE Account_Type=?''',(AccountInfo,))
 		AccountNum=cur.fetchall()
-		print(AccountNum)
 		for item in AccountNum:
 			String = str(item)
 			String = String.lstrip('(')
@@ -163,7 +160,6 @@ with lite.connect(DIR_PATH) as conn:
 		#retrive the previous balance for the specific account
 		cur.execute('SELECT Balance FROM Accounts WHERE AccountID = ?',(AccountNum,))
 		PreviousBalance =cur.fetchall()
-		print(PreviousBalance)
 		
 		#turn previous balance tuple into string
 		for item in PreviousBalance:
@@ -172,8 +168,6 @@ with lite.connect(DIR_PATH) as conn:
 			String = String.rstrip(')')
 			String = String.rstrip(',')
 			PreviousBalance=(String)
-			print(PreviousBalance)
-		print(PreviousBalance)
 		#turn previous balance into float and round it
 		PreviousBalance = float(PreviousBalance)
 		PreviousBalance = round(PreviousBalance, 2)

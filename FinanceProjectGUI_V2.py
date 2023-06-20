@@ -257,7 +257,7 @@ class FinanceGUI:
 	# Additional Methods
 	#Handles Typical transactions.Is called by Handle Account Frame Widgets.
 	def TransDataAndTransCommit(self):
-		#try:
+		try:
 			# Get data for Transaction
 			self.selected = self.AccountsInfoTreeview.focus()
 			self.Account = self.AccountsInfoTreeview.item(self.selected, 'values')
@@ -275,7 +275,6 @@ class FinanceGUI:
 			if self.TransactionAmount =='' or self.TransactionType == '' or self.Month=='' or self.Year==''or self.Day==''\
 			or self. MonthTest > 12 or self. MonthTest<1 or self.DayTest<0 or self.DayTest>31 or self.YearTest < 2023  :
 				# Create an error message variable
-				print('dklgsj;hk')
 				self.ErrorMessage = 'Error! Follow the directions and please try again.'
 				# Display the error message in an info dialog box.
 				tk.messagebox.showinfo('Error!', self.ErrorMessage)
@@ -291,12 +290,11 @@ class FinanceGUI:
 				self.YearofTransEntry.delete(0,END)
 				self.DayofTransEntry.delete(0,END)
 				self.MonthofTransEntry.delete(0,END)
-		#except:
-			#print('dklghuodsj;')
+		except:
 			#Create an error message variable
-			#self.ErrorMessage ='Error! Follow the directions and please try again.'
+			self.ErrorMessage ='Error! Follow the directions and please try again.'
 			#Display the error message in an info dialog box.
-			#tk.messagebox.showinfo('Error!', self.ErrorMessage)
+			tk.messagebox.showinfo('Error!', self.ErrorMessage)
 			
 			
 	#Creates a new account
@@ -388,7 +386,7 @@ class FinanceGUI:
 			
 	#Handles transferring money between two accounts
 	def TransferringMoney(self):
-		#try:
+		try:
 			#get accounts transferring and amount of money being transferred
 			self.TransferredMoney = self.AmountTransferredEntry.get()
 			self.TransMonGivingAccount = self.GivingAccount
@@ -411,11 +409,11 @@ class FinanceGUI:
 				self.RecipientAccountLabel.config(text='Recipient Account:',font=('Times New Roman', 11), foreground='black', background='white')
 				#clear amount transferred entry
 				self.AmountTransferredEntry.delete(0,END)
-		#except:
+		except:
 			# Create an error message variable
-			#self.ErrorMessage ='Error! Follow the directions and please try again.'
+			self.ErrorMessage ='Error! Follow the directions and please try again.'
 			# Display the error message in an info dialog box.
-			#tk.messagebox.showinfo('Error!', self.ErrorMessage)
+			tk.messagebox.showinfo('Error!', self.ErrorMessage)
 	
 	
 	#gets the giving account for transferring money
@@ -432,7 +430,7 @@ class FinanceGUI:
 				String = str(item)
 				self.GivingAccount = String
 				#end the loop when the correct value is in play
-				if count > 1:
+				if count == 1:
 					break
 			#if the Giving Account variable isn't empty, make the Giving account label change text and coloring
 			if self.GivingAccount!= '':
@@ -460,7 +458,7 @@ class FinanceGUI:
 				String = str(item)
 				self.RecipientAccount = String
 				# end the loop when the correct value is in play
-				if count > 1:
+				if count == 1:
 					break
 			#if the Recipient Account variable isn't empty, make the Recipient account label change text and coloring
 			if self.RecipientAccount!= '':
