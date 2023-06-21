@@ -232,7 +232,7 @@ with lite.connect(DIR_PATH) as conn:
 		conn = lite.connect(DIR_PATH)
 		cur = conn.cursor()
 		# get the transaction history of all accounts if the argument some version of 'All'
-		if AccountHistory == 'all' or AccountHistory == 'All' or AccountHistory == 'ALL':
+		if AccountHistory == '':
 			cur.execute("SELECT Accounts.Account_Type,'Transaction'.Previous_Balance,'Transaction'.New_Balance,"
 			"'Transaction'.Transaction_Type,'Transaction'.Money_Transferred,'Transaction'.Date_Of_Transaction "
 			"FROM Accounts INNER JOIN 'Transaction' ON Accounts.AccountID= 'Transaction'.AccountID")

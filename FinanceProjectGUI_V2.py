@@ -114,10 +114,8 @@ class FinanceGUI:
 											text="Account's Transaction history: enter the name of the account below and click the Transaction History button."
 												 "\n To restore the table, type all and click the Transaction History button.",
 											font=('Times New Roman', 11))
-		self.AccountHistoryEntry = tk.Entry(self.TransactionHistoryFrame, width=50, font=('Times New Roman', 11))
 		##Pack Transaction history frame widgets
 		self.AccountHistoryLabel.pack()
-		self.AccountHistoryEntry.pack()
 		## Create handle account frame widgets
 		self.TransactionLabel = tk.Label(self.HandleAccountFrame,
 										 text='To enter a transaction, click the account row in the left table where the transacation took place then put the transaction amount here.'
@@ -211,7 +209,7 @@ class FinanceGUI:
 		##Configure the Transaction Treeview Scrollbar
 		self.Transaction_yscroll.config(command=self.TransHisTransactionInfo.yview)
 		##Populate the Transaction Treeview with data
-		self.StartAccountHistory = 'all'
+		self.StartAccountHistory = ''
 		rows = FinanceProjectDatabaseAccess.AccountTransactionHistory(self.StartAccountHistory)
 		for row in rows:
 			self.TransHisTransactionInfo.insert("", tk.END, values=row)
@@ -241,12 +239,15 @@ class FinanceGUI:
 		self.DeleteAccountButton = tk.Button(self.ButtonsFrame, text='Delete Account', command=self.DeleteAccount,font=('Times New Roman',11))
 		self.ConfirmTransferButton = tk.Button(self.ButtonsFrame, text='Confirm Transfer',
 											   command=self.TransferringMoney,font=('Times New Roman',11))
+		self.TransHisTreeResetButton = tk.Button(self.ButtonsFrame, text='Reset Transaction Table',
+											   command=self.ResetTransHisTree, font=('Times New Roman', 11))
 		#Pack Widgets for the button frame
 		self.ConfirmTransferButton.pack(side='left', padx=50)
 		self.AddAccountButton.pack(side='left', padx=50)
 		self.DeleteAccountButton.pack(side='left', padx=50)
 		self.ConfirmTransactionButton.pack(side='left',padx=50)
 		self.AccountHistoryButton.pack(side='left', padx=50)
+		self.TransHisTreeResetButton.pack(side='left', padx=50)
 		self.AccOverQuitButton.pack(side='left',padx=50)
 		
 		
@@ -360,23 +361,35 @@ class FinanceGUI:
 	#Gets the account transaction history of a specific account
 	def AccountHistory(self):
 		try:
-			#get an account to get transaction history of it
-			self.AccountHistory = self.AccountHistoryEntry.get()
-			if self.AccountHistory=='':
-				# Create an error message variable
-				self.ErrorMessage = 'Error! Follow the directions and please try again.'
-				# Display the error message in an info dialog box.
-				tk.messagebox.showinfo('Error!', self.ErrorMessage)
-			else:
+			#get the selected account name from the accounts treeview
+			self.selected = self.AccountsInfoTreeview.focus()
+			self.AccountHistory = self.AccountsInfoTreeview.item(self.selected, 'values')
+			#isolate the account name from the rest of the data
+			# start accumulator to act as a trigger to end the loop early so the needed value can be obtained
+			count = 0
+			# process tuple data into string data
+			for item in self.AccountHistory:
+				count += 1
+				String = str(item)
+				self.AccountHistory = String
+				# end the loop when the correct value is in play
+				if count == 1:
+					break
+			#if there is no account clicked the table is restored
+			if self.AccountHistory!='':
 				# call the Account transaction History function to retrieve data from the database to view
-				self.TransactionAccountHistory = FinanceProjectDatabaseAccess.AccountTransactionHistory(self.AccountHistory)
-				#clear the data out and replace it with the requested data
+				self.TransactionAccountHistory = FinanceProjectDatabaseAccess.AccountTransactionHistory(
+					self.AccountHistory)
+				# clear the data out and replace it with the requested data
 				for item in self.TransHisTransactionInfo.get_children():
 					self.TransHisTransactionInfo.delete(item)
 				for row in self.TransactionAccountHistory:
 					self.TransHisTransactionInfo.insert("", tk.END, values=row)
-				#clear account history entry
-				self.AccountHistoryEntry.delete(0, END)
+			else:
+				# Create an error message variable
+				self.ErrorMessage = 'Error! Follow the directions and please try again.'
+				# Display the error message in an info dialog box.
+				tk.messagebox.showinfo('Error!', self.ErrorMessage)
 		except:
 			# Create an error message variable
 			self.ErrorMessage ='Error! Follow the directions and please try again.'
@@ -497,7 +510,18 @@ class FinanceGUI:
 		#Insert new transaction treeview data into the transaction treeview
 		for row in TransactionAccountHistory:
 			self.TransHisTransactionInfo.insert("", tk.END, values=row)
-			
+	
+	def ResetTransHisTree(self):
+		#make account history an empty string to reset the treeview
+		self.AccountHistory=''
+		#get the transaction info from the other module
+		self.TransactionAccountHistory = FinanceProjectDatabaseAccess.AccountTransactionHistory(
+			self.AccountHistory)
+		# clear the data out and replace it with the requested data
+		for item in self.TransHisTransactionInfo.get_children():
+			self.TransHisTransactionInfo.delete(item)
+		for row in self.TransactionAccountHistory:
+			self.TransHisTransactionInfo.insert("", tk.END, values=row)
 			
 # Call the Finance GUI Class
 if __name__ == '__main__':
