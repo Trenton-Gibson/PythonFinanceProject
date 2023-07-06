@@ -36,6 +36,7 @@ class FinanceGUI:
 		##Child frames of top middle frame
 		self.TransactionHistoryFrame = Frame(self.TopMidFrame, relief=SUNKEN, borderwidth=10)
 		self.HandleAccountFrame = Frame(self.TopMidFrame, relief=SUNKEN, borderwidth=10)
+		self.RenameAccountFrame = Frame(self.TransactionHistoryFrame, relief=SUNKEN, borderwidth= 10)
 		### Child Frame of Handle account frame
 		self.EnterDateFrame=Frame(self.HandleAccountFrame)
 		##Child Frames of true middle frame
@@ -59,6 +60,7 @@ class FinanceGUI:
 		##Frames of Top Middle Frame
 		self.HandleAccountFrame.pack(side='left')
 		self.TransactionHistoryFrame.pack(side='left')
+		self.RenameAccountFrame.pack(side='bottom')
 		##Frames of True Middle Frame
 		self.AccountTreeviewFrame.pack(side='left')
 		self.TransactionTreeviewFrame.pack(side='left')
@@ -112,10 +114,17 @@ class FinanceGUI:
 		## Create transaction history frame widgets
 		self.AccountHistoryLabel = tk.Label(self.TransactionHistoryFrame,
 											text="Account's Transaction history: enter the name of the account below and click the Transaction History button."
-												 "\n To restore the table, type all and click the Transaction History button.",
+											 "\n To restore the table, type all and click the Transaction History button.", relief= SUNKEN, borderwidth=10,
 											font=('Times New Roman', 11))
+		self.RenameAccountLabel=tk.Label(self.TransactionHistoryFrame,
+										 text='Click the account you want to rename, type in the new name, '
+											  '\nand click the "Rename Account" button.',
+											font=('Times New Roman', 11))
+		self.RenameAccountEntry=tk.Entry(self.TransactionHistoryFrame, width=50, font=('Times New Roman', 11))
 		##Pack Transaction history frame widgets
 		self.AccountHistoryLabel.pack()
+		self.RenameAccountLabel.pack()
+		self.RenameAccountEntry.pack()
 		## Create handle account frame widgets
 		self.TransactionLabel = tk.Label(self.HandleAccountFrame,
 										 text='To enter a transaction, click the account row in the left table where the transacation took place then put the transaction amount here.'
@@ -241,15 +250,16 @@ class FinanceGUI:
 											   command=self.TransferringMoney,font=('Times New Roman',11))
 		self.TransHisTreeResetButton = tk.Button(self.ButtonsFrame, text='Reset Transaction Table',
 											   command=self.ResetTransHisTree, font=('Times New Roman', 11))
+		self.RenameAccountButton=tk.Button(self.ButtonsFrame, text='Rename Account',command=self.RenameAccount, font=('Times New Roman',11))
 		#Pack Widgets for the button frame
-		self.ConfirmTransferButton.pack(side='left', padx=50)
-		self.AddAccountButton.pack(side='left', padx=50)
-		self.DeleteAccountButton.pack(side='left', padx=50)
-		self.ConfirmTransactionButton.pack(side='left',padx=50)
-		self.AccountHistoryButton.pack(side='left', padx=50)
-		self.TransHisTreeResetButton.pack(side='left', padx=50)
-		self.AccOverQuitButton.pack(side='left',padx=50)
-		
+		self.ConfirmTransferButton.pack(side='left', padx=30)
+		self.AddAccountButton.pack(side='left', padx=30)
+		self.DeleteAccountButton.pack(side='left', padx=30)
+		self.ConfirmTransactionButton.pack(side='left',padx=30)
+		self.AccountHistoryButton.pack(side='left', padx=30)
+		self.TransHisTreeResetButton.pack(side='left', padx=30)
+		self.AccOverQuitButton.pack(side='left',padx=30)
+		self.RenameAccountButton.pack(side='left',padx=30)
 		
 		# Start the mainloop
 		tk.mainloop()
@@ -333,6 +343,7 @@ class FinanceGUI:
 			#get data for which account to delete
 			self.selected = self.AccountsInfoTreeview.focus()
 			self.AccountToDelete= self.AccountsInfoTreeview.item(self.selected, 'values')
+			
 			#set up accumulator to end the loop when the correct tuple data is place
 			count=0
 			#processe tuple data into a usable string form
@@ -344,7 +355,7 @@ class FinanceGUI:
 				String = String.rstrip(',')
 				self.AccountToDelete = String
 				#loop ends when the second data value gets processed
-				if count>1:
+				if count==1:
 					break
 			#Calls Delete account function from the other module to interact with the database
 			FinanceProjectDatabaseAccess.DeleteAccount(self.AccountToDelete)
@@ -522,7 +533,40 @@ class FinanceGUI:
 			self.TransHisTransactionInfo.delete(item)
 		for row in self.TransactionAccountHistory:
 			self.TransHisTransactionInfo.insert("", tk.END, values=row)
-			
+	
+	##Renames the account of your choosing to whatever you put in the entry
+	def RenameAccount(self):
+		try:
+			#get the new name for the account and find the name of the account you wish to change
+			self.NewName = self.RenameAccountEntry.get()
+			self.selected = self.AccountsInfoTreeview.focus()
+			self.ToBeRenamedAccount = self.AccountsInfoTreeview.item(self.selected, 'values')
+			if self.NewName == '' or self.ToBeRenamedAccount == '':
+				# Create an error message variable
+				self.ErrorMessage = 'Error! Follow the directions and please try again.'
+				# Display the error message in an info dialog box.
+				tk.messagebox.showinfo('Error!', self.ErrorMessage)
+			else:
+				#this section turns the tuple from the treeview into a string
+				# start accumulator to act as a trigger to end the loop early so the needed value can be obtained
+				count = 0
+				# process tuple data into string data
+				for item in self.ToBeRenamedAccount:
+					count += 1
+					String = str(item)
+					self.ToBeRenamedAccount = String
+					# end the loop when the correct value is in play
+					if count == 1:
+						break
+				FinanceProjectDatabaseAccess.RenamingAccount(self.ToBeRenamedAccount,self.NewName)
+				self.RepopulateAccountsTreeview()
+				self.RenameAccountEntry.delete(0, END)
+		except:
+			# Create an error message variable
+			self.ErrorMessage = 'Error! Follow the directions and please try again.'
+			# Display the error message in an info dialog box.
+			tk.messagebox.showinfo('Error!', self.ErrorMessage)
+
 # Call the Finance GUI Class
 if __name__ == '__main__':
 	FinanceGUI()

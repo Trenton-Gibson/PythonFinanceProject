@@ -343,3 +343,14 @@ with lite.connect(DIR_PATH) as conn:
 		cur.execute('''UPDATE Accounts SET Balance=round(Balance,2) WHERE Account_Type=?''',(GivingAccount,))
 		conn.commit()
 		conn.close()
+		
+		##Handles the transformation of account names on the database side
+	def RenamingAccount(ToBeChangedAccount,NewName):
+		# connect to the database and make a cursor
+		conn = lite.connect(DIR_PATH)
+		cur = conn.cursor()
+		#update the account name for the selected account
+		cur.execute('''UPDATE Accounts SET Account_Type=? WHERE Account_Type=?''',(NewName,ToBeChangedAccount))
+		#commit the transaction and close the database
+		conn.commit()
+		conn.close
